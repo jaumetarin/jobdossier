@@ -1,11 +1,13 @@
 import { Controller, Get, Post } from '@nestjs/common';
 import { AdzunaService } from './adzuna.service';
 import { TecnoempleoService } from './tecnoempleo.service'; 
+import { FetcherOrchestratorService } from './fetcher-orchestrator.service';
 
 @Controller('fetcher')
 export class FetcherController {
   constructor(
     private readonly adzunaService: AdzunaService,
+    private readonly fetcherOrchestratorService: FetcherOrchestratorService,
     private readonly tecnoempleoService: TecnoempleoService,
   ) {}
 
@@ -26,4 +28,10 @@ testTecnoempleo() {
   importTecnoempleoJobs() {
     return this.tecnoempleoService.importJobs();
   }
+
+  @Post('import-all')
+importAllJobs() {
+  return this.fetcherOrchestratorService.importAllJobs();
+}
+
 }
