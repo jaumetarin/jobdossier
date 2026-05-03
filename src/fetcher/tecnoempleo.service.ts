@@ -36,7 +36,8 @@ export class TecnoempleoService implements IJobFetcher {
   async fetchJobs(): Promise<NormalizedJobOffer[]> {
     const offers: NormalizedJobOffer[] = [];
     
-    for (const keyword of this.keywords) {
+   for (let index = 0; index < this.keywords.length; index++) {
+    const keyword = this.keywords[index];
     const url = `${this.baseUrl}/${keyword}`;
     const response = await fetch(url);
 
@@ -96,10 +97,13 @@ export class TecnoempleoService implements IJobFetcher {
         publishedAt,
       });
     });
-  }
+    const isLastKeyword = index === this.keywords.length - 1;
+
+    if (!isLastKeyword) {
+    await this.delay(1500);
+  }}
     return offers;
   }
-
   private parseLocationAndDate(locationText?: string): {
     location?: string;
     publishedAt?: Date;
@@ -170,4 +174,9 @@ export class TecnoempleoService implements IJobFetcher {
 
     return this.jobPersistenceService.saveJobs(processedJobs);
   }
+
+  private delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 }

@@ -6,6 +6,23 @@ type JobPersistenceSummary = {
   fetched: number;
   created: number;
   skipped: number;
+  newJobs: {
+    id: number;
+    source: string;
+    externalId: string | null;
+    title: string;
+    company: string;
+    location: string | null;
+    modality: string | null;
+    salaryText: string | null;
+    url: string;
+    description: string | null;
+    technologiesRaw: string | null;
+    technologies: string[];
+    publishedAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }[];
 };
 
 @Injectable()
@@ -15,7 +32,7 @@ export class JobPersistenceService {
   async saveJobs(
     jobs: ProcessedJobOffer[],
   ): Promise<JobPersistenceSummary> {
-    const result = await this.prismaService.jobOffer.createMany({
+    const createdJobs = await this.prismaService.jobOffer.createManyAndReturn({
       data: jobs.map((job) => ({
         source: job.source,
         externalId: job.externalId,
@@ -28,11 +45,12 @@ export class JobPersistenceService {
         description: job.description,
         technologiesRaw: job.technologiesRaw,
         publishedAt: job.publishedAt,
+        technologies: job.technologies,
       })),
       skipDuplicates: true,
     });
 
-    const created = result.count;
+    const created = createdJobs.length;
     const fetched = jobs.length;
     const skipped = fetched - created;
 
@@ -40,6 +58,7 @@ export class JobPersistenceService {
       fetched,
       created,
       skipped,
+      newJobs: createdJobs,
     };
   }
 }

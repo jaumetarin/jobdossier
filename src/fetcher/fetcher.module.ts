@@ -9,12 +9,13 @@ import { FetcherOrchestratorService } from './fetcher-orchestrator.service';
 import { BullModule } from '@nestjs/bullmq';
 import { FetcherProcessor } from './fetcher.processor';
 import { FetcherSchedulerService } from './fetcher-scheduler.service';
+import {NotificationsModule} from '../notifications/notifications.module';
 
 @Module({
   imports: [PrismaModule,BullModule.registerQueue({
   name: 'fetcher',
-}),
-],
+}), NotificationsModule],
+
   controllers: [FetcherController],
   providers: [
     AdzunaService, 
