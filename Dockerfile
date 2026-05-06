@@ -1,4 +1,4 @@
-# Imagen base
+﻿# Imagen base
 FROM node:20-alpine
 
 # Directorio de trabajo
@@ -12,6 +12,7 @@ RUN npm install
 COPY . .
 
 RUN npx prisma generate
+RUN npm run build
 
-# Arrancar en modo desarrollo
-CMD ["npm", "run", "start:dev"]
+# Aplicar migraciones y arrancar en modo producción
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:prod"]
