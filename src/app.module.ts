@@ -9,7 +9,7 @@ import { OffersModule } from './offers/offers.module';
 import { AuthModule } from "./auth/auth.module";
 import { FiltersModule } from './filters/filters.module';
 import { NotificationsModule } from './notifications/notifications.module';
-
+import { AnalyticsModule } from "./analytics/analytics.module";
 
 @Module({
   imports: [
@@ -20,6 +20,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     OffersModule,
     FetcherModule,
     NotificationsModule,
+    AnalyticsModule,
     BullModule.forRoot({
       connection: {
         host: 'redis',

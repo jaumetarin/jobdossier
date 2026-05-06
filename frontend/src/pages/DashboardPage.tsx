@@ -12,6 +12,17 @@ import {
   type OffersQuery,
 } from '../types/offer';
 import { JobOfferCard } from '../components/JobOfferCard';
+import {
+  getSalaryByStack,
+  getTopCompanies,
+  getTopTechnologies,
+} from '../services/analytics';
+import {
+  type SalaryByStack,
+  type TopCompany,
+  type TopTechnology,
+} from '../types/analytics';
+
 
 function formatPublishedAt(value: string | null) {
   if (!value) {
@@ -78,6 +89,11 @@ export function DashboardPage() {
     activeQuery.modality,
   ].filter(Boolean).length;
 
+  const [topCompanies, setTopCompanies] = useState<TopCompany[]>([]);
+  const [topTechnologies, setTopTechnologies] = useState<TopTechnology[]>([]);
+  const [salaryByStack, setSalaryByStack] = useState<SalaryByStack[]>([]);
+  const [analyticsError, setAnalyticsError] = useState('');
+
   function buildDashboardQuery(): OffersQuery {
     return {
       search: dashboardSearch.trim() || undefined,
@@ -94,8 +110,9 @@ export function DashboardPage() {
     setDashboardModality(query.modality ?? '');
   }
 
-  async function loadDashboardData(query: OffersQuery = activeQuery) {
+   async function loadDashboardData(query: OffersQuery = activeQuery) {
     setError('');
+    setAnalyticsError('');
 
     try {
       const [userResponse, offersResponse, filtersResponse] = await Promise.all([
@@ -107,12 +124,46 @@ export function DashboardPage() {
       setUser(userResponse.data);
       setOffers(offersResponse.items);
       setNotificationFilters(filtersResponse);
+
+      const [companiesResult, technologiesResult, salaryResult] =
+        await Promise.allSettled([
+          getTopCompanies(),
+          getTopTechnologies(10),
+          getSalaryByStack(),
+        ]);
+
+      if (companiesResult.status === 'fulfilled') {
+        setTopCompanies(companiesResult.value);
+      } else {
+        setTopCompanies([]);
+      }
+
+      if (technologiesResult.status === 'fulfilled') {
+        setTopTechnologies(technologiesResult.value);
+      } else {
+        setTopTechnologies([]);
+      }
+
+      if (salaryResult.status === 'fulfilled') {
+        setSalaryByStack(salaryResult.value);
+      } else {
+        setSalaryByStack([]);
+      }
+
+      if (
+        companiesResult.status === 'rejected' ||
+        technologiesResult.status === 'rejected' ||
+        salaryResult.status === 'rejected'
+      ) {
+        setAnalyticsError('No se pudieron cargar los analytics.');
+      }
     } catch {
       setError('No se pudieron cargar los datos del dashboard.');
     } finally {
       setIsLoading(false);
     }
   }
+
 
   useEffect(() => {
     void loadDashboardData({});
@@ -468,6 +519,86 @@ export function DashboardPage() {
               </div>
             </article>
           ))}
+        </div>
+      </section>
+                <section
+        style={{
+          background: '#fff',
+          border: '1px solid #d1d5db',
+          borderRadius: 12,
+          padding: '1rem',
+          marginBottom: '1.5rem',
+        }}
+      >
+        <h2 style={{ marginTop: 0 }}>Analytics</h2>
+        <p style={{ marginTop: 0, color: '#4b5563' }}>
+          Estos datos los calcula el microservicio Spring Boot y llegan al frontend a través del backend NestJS.
+        </p>
+
+        {analyticsError ? <p style={{ color: '#b91c1c' }}>{analyticsError}</p> : null}
+
+        <div
+          style={{
+            display: 'grid',
+            gap: '1rem',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          }}
+        >
+          <article
+            style={{
+              border: '1px solid #e5e7eb',
+              borderRadius: 10,
+              padding: '0.75rem',
+            }}
+          >
+            <h3 style={{ marginTop: 0 }}>Top tecnologías</h3>
+            {topTechnologies.length === 0 ? <p>Sin datos todavía.</p> : null}
+            <div style={{ display: 'grid', gap: '0.5rem' }}>
+              {topTechnologies.slice(0, 5).map((item) => (
+                <p key={item.technology} style={{ margin: 0 }}>
+                  <strong>{item.technology}</strong>: {item.count}
+                </p>
+              ))}
+            </div>
+          </article>
+
+          <article
+            style={{
+              border: '1px solid #e5e7eb',
+              borderRadius: 10,
+              padding: '0.75rem',
+            }}
+          >
+            <h3 style={{ marginTop: 0 }}>Empresas top</h3>
+            {topCompanies.length === 0 ? <p>Sin datos todavía.</p> : null}
+            <div style={{ display: 'grid', gap: '0.5rem' }}>
+              {topCompanies.slice(0, 5).map((item) => (
+                <p key={item.company} style={{ margin: 0 }}>
+                  <strong>{item.company}</strong>: {item.count}
+                </p>
+              ))}
+            </div>
+          </article>
+
+          <article
+            style={{
+              border: '1px solid #e5e7eb',
+              borderRadius: 10,
+              padding: '0.75rem',
+            }}
+          >
+            <h3 style={{ marginTop: 0 }}>Salario medio por stack</h3>
+            {salaryByStack.length === 0 ? <p>Sin datos todavía.</p> : null}
+            <div style={{ display: 'grid', gap: '0.5rem' }}>
+              {salaryByStack.slice(0, 5).map((item) => (
+                <p key={item.technology} style={{ margin: 0 }}>
+                  <strong>{item.technology}</strong>: {Math.round(item.averageSalary)} €
+                  {' · '}
+                  muestra {item.sampleSize}
+                </p>
+              ))}
+            </div>
+          </article>
         </div>
       </section>
 

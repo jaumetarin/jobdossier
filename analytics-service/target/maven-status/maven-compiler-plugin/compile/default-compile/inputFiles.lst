@@ -1,0 +1,11 @@
+C:\Users\Jaume\jobdossier\analytics-service\src\main\java\com\jobdossier\analytics\AnalyticsServiceApplication.java
+C:\Users\Jaume\jobdossier\analytics-service\src\main\java\com\jobdossier\analytics\controller\AnalyticsController.java
+C:\Users\Jaume\jobdossier\analytics-service\src\main\java\com\jobdossier\analytics\dto\SalaryByStackDto.java
+C:\Users\Jaume\jobdossier\analytics-service\src\main\java\com\jobdossier\analytics\dto\TopCompanyDto.java
+C:\Users\Jaume\jobdossier\analytics-service\src\main\java\com\jobdossier\analytics\dto\TopTechnologyDto.java
+C:\Users\Jaume\jobdossier\analytics-service\src\main\java\com\jobdossier\analytics\model\JobOffer.java
+C:\Users\Jaume\jobdossier\analytics-service\src\main\java\com\jobdossier\analytics\repository\JobOfferRepository.java
+C:\Users\Jaume\jobdossier\analytics-service\src\main\java\com\jobdossier\analytics\repository\SalarySampleProjection.java
+C:\Users\Jaume\jobdossier\analytics-service\src\main\java\com\jobdossier\analytics\repository\TopCompanyProjection.java
+C:\Users\Jaume\jobdossier\analytics-service\src\main\java\com\jobdossier\analytics\repository\TopTechnologyProjection.java
+C:\Users\Jaume\jobdossier\analytics-service\src\main\java\com\jobdossier\analytics\service\AnalyticsService.java

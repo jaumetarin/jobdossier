@@ -11,13 +11,34 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/jobdossier
       REDIS_URL: redis://redis:6379
+      ANALYTICS_SERVICE_URL: http://analytics:8080
     volumes:
       - .:/app
       - /app/node_modules
     depends_on:
       - postgres
       - redis
+      - analytics
     command: npm run start:dev
+
+  analytics:
+    build:
+      context: ./analytics-service
+      dockerfile: Dockerfile
+    container_name: jobdossier_analytics
+    ports:
+      - '8080:8080'
+    environment:
+      PORT: 8080
+      ANALYTICS_DATASOURCE_URL: jdbc:postgresql://postgres:5432/jobdossier
+      ANALYTICS_DATASOURCE_USERNAME: postgres
+      ANALYTICS_DATASOURCE_PASSWORD: postgres
+    volumes:
+      - ./analytics-service:/app
+      - /app/.mvn
+    depends_on:
+      - postgres
+    command: ./mvnw spring-boot:run
 
   postgres:
     image: postgres:16-alpine
