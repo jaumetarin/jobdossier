@@ -1,17 +1,29 @@
-import { NestFactory } from '@nestjs/core';
+﻿import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
+function getAllowedOrigins() {
+  return (process.env.FRONTEND_URL ?? 'http://localhost:5173')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const allowedOrigins = getAllowedOrigins();
 
-  const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173';
+  app.enableCors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
 
-    app.enableCors({
-     origin: frontendUrl,
-      credentials: true,
-    });
-
+      callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  });
 
   const config = new DocumentBuilder()
     .setTitle('Jobdossier API')
