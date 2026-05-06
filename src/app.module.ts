@@ -1,19 +1,20 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { FetcherModule } from './fetcher/fetcher.module';
-import { BullModule } from '@nestjs/bullmq';
 import { OffersModule } from './offers/offers.module';
-import { AuthModule } from "./auth/auth.module";
+import { AuthModule } from './auth/auth.module';
 import { FiltersModule } from './filters/filters.module';
 import { NotificationsModule } from './notifications/notifications.module';
-import { AnalyticsModule } from "./analytics/analytics.module";
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({isGlobal: true}),
+    ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     FiltersModule,
@@ -21,12 +22,6 @@ import { AnalyticsModule } from "./analytics/analytics.module";
     FetcherModule,
     NotificationsModule,
     AnalyticsModule,
-    BullModule.forRoot({
-      connection: {
-        host: 'redis',
-        port: 6379,
-      },
-    }),
   ],
   controllers: [AppController],
   providers: [AppService],

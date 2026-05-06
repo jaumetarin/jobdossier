@@ -10,14 +10,12 @@ services:
       - .env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/jobdossier
-      REDIS_URL: redis://redis:6379
       ANALYTICS_SERVICE_URL: http://analytics:8080
     volumes:
       - .:/app
       - /app/node_modules
     depends_on:
       - postgres
-      - redis
       - analytics
     command: npm run start:dev
 
@@ -51,12 +49,6 @@ services:
       POSTGRES_DB: jobdossier
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:7
-    container_name: jobdossier_redis
-    ports:
-      - '6380:6379'
 
 volumes:
   postgres_data:
