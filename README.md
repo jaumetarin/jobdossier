@@ -1,98 +1,342 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Jobdossier
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Jobdossier es una plataforma full-stack para descubrir, filtrar y analizar ofertas de empleo tecnológicas.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+La idea detrás del proyecto es resolver un problema muy real: buscar trabajo en tech suele implicar revisar muchas ofertas dispersas, filtrar resultados manualmente, guardar criterios repetidos y tratar de entender el mercado sin herramientas claras. Este proyecto unifica esa experiencia y añade una capa de analítica con microservicios para ir más allá del simple listado de ofertas.
 
-## Description
+## Demo
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- Frontend: [https://jobdossier.vercel.app](https://jobdossier.vercel.app)
+- Backend API: [https://jobdossier.onrender.com](https://jobdossier.onrender.com)
+- Analytics service: `https://jobdossier-analytics.onrender.com`
+- Swagger NestJS: [https://jobdossier.onrender.com/api](https://jobdossier.onrender.com/api)
 
-## Project setup
+## Qué hace
+
+- Permite registro e inicio de sesión con JWT
+- Recupera y persiste ofertas de empleo tech en PostgreSQL
+- Permite buscar y filtrar ofertas por texto, ubicación y modalidad
+- Permite guardar filtros personalizados por usuario
+- Emite notificaciones en tiempo real cuando aparecen nuevas ofertas relevantes
+- Expone una API REST documentada con Swagger
+- Incluye un microservicio Spring Boot para analítica
+- Muestra métricas de mercado como empresas top, tecnologías top y salario por stack
+- Incluye un frontend React para autenticación, dashboard, filtros y visualización de ofertas
+
+## Stack técnico
+
+### Backend
+
+- NestJS
+- TypeScript
+- Prisma
+- PostgreSQL
+- JWT
+- Swagger
+- Jest
+- Socket.IO
+- `@nestjs/schedule`
+
+### Frontend
+
+- React
+- TypeScript
+- Vite
+- Axios
+- React Router
+- Socket.IO client
+
+### Microservicio de analytics
+
+- Java 21
+- Spring Boot
+- Spring Data JPA
+- PostgreSQL
+- Spring Actuator
+- Springdoc OpenAPI
+- JUnit 5
+
+### Infraestructura
+
+- Docker
+- Docker Compose
+- GitHub Actions
+- Render
+- Neon
+- Vercel
+
+## Arquitectura general
+
+El backend principal está dividido en módulos por responsabilidad:
+
+- `auth`: registro, login y validación JWT
+- `offers`: lectura y consulta de ofertas
+- `filters`: filtros guardados por usuario
+- `fetcher`: importación y orquestación de ofertas
+- `notifications`: WebSockets y eventos en tiempo real
+- `analytics`: BFF que consume el microservicio Spring Boot
+- `prisma`: acceso a base de datos
+
+El frontend React vive en la carpeta `frontend`.
+
+El microservicio Spring Boot vive en la carpeta `analytics-service` y se encarga solo de la parte analítica.
+
+## Flujo principal
+
+1. El usuario se registra o inicia sesión
+2. El backend emite un JWT propio
+3. El frontend guarda el token y protege las rutas privadas
+4. El usuario consulta ofertas y aplica filtros
+5. El usuario puede guardar filtros personalizados
+6. El backend importa nuevas ofertas de forma programada
+7. Si aparecen ofertas relevantes, el backend emite eventos por WebSocket
+8. El frontend actualiza el dashboard en tiempo real
+9. El frontend consulta analytics al backend NestJS
+10. NestJS delega la consulta al microservicio Spring Boot
+11. Spring Boot calcula y devuelve las métricas desde PostgreSQL
+
+## Automatización
+
+La importación periódica de ofertas se ejecuta desde el propio backend NestJS usando `@nestjs/schedule`.
+
+El proceso programado llama a la orquestación del fetcher y persiste nuevas ofertas en la base de datos. Si alguna coincide con filtros guardados, se emite una notificación por WebSocket al usuario correspondiente.
+
+Este enfoque simplifica la infraestructura y evita depender de Redis o BullMQ para un caso de uso que aquí se resuelve mejor con scheduling nativo.
+
+## Ejecución en local
+
+### Requisitos
+
+- Docker
+- Docker Compose
+- Node.js 20+
+- Java 21
+
+### Variables de entorno
+
+Debes configurar variables de entorno para backend, frontend y analytics.
+
+Especialmente:
+
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `ANALYTICS_SERVICE_URL`
+- `FRONTEND_URL`
+- `ADZUNA_APP_ID`
+- `ADZUNA_APP_KEY`
+- `ANALYTICS_DATASOURCE_URL`
+- `ANALYTICS_DATASOURCE_USERNAME`
+- `ANALYTICS_DATASOURCE_PASSWORD`
+- `VITE_API_URL`
+
+### Levantar backend, analytics y base de datos
+
+Desde la raíz del proyecto:
 
 ```bash
-$ npm install
+docker compose up --build
 ```
 
-## Compile and run the project
+Esto levanta:
+
+- backend NestJS
+- microservicio Spring Boot
+- PostgreSQL
+
+### Levantar frontend React
+
+En otra terminal:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cd frontend
+npm install
+npm run dev
 ```
 
-## Run tests
+El frontend quedará disponible en:
+
+```txt
+http://localhost:5173
+```
+
+### Levantar Spring Boot manualmente
+
+En Git Bash:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+cd analytics-service
+./mvnw test
+./mvnw spring-boot:run
 ```
 
-## Deployment
+En PowerShell:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+```powershell
+cd analytics-service
+.\mvnw.cmd test
+.\mvnw.cmd spring-boot:run
+```
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Tests y build
+
+### Backend NestJS
+
+Desde la raíz del proyecto:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install
+npm test
+npm run build
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Frontend React
 
-## Resources
+Desde `frontend`:
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+npm install
+npm test
+npm run build
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Microservicio Spring Boot
 
-## Support
+Desde `analytics-service`:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+./mvnw test
+```
 
-## Stay in touch
+## API y documentación
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Cuando el backend está arrancado, Swagger queda disponible en:
 
-## License
+```txt
+http://localhost:3000/api
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+En producción:
+
+```txt
+https://jobdossier.onrender.com/api
+```
+
+Cuando el microservicio Spring Boot está arrancado:
+
+```txt
+http://localhost:8080/swagger-ui.html
+```
+
+En local también dispone de healthcheck en:
+
+```txt
+http://localhost:8080/actuator/health
+```
+
+## Rutas principales del frontend
+
+- `/login`
+- `/register`
+- `/dashboard`
+
+## Estado del proyecto
+
+Actualmente el proyecto incluye:
+
+- autenticación con JWT
+- persistencia de usuarios y filtros
+- consulta de ofertas
+- filtros guardados por usuario
+- importación programada de ofertas
+- notificaciones en tiempo real por WebSocket
+- microservicio Spring Boot de analytics
+- frontend React funcional
+- CI con GitHub Actions
+- despliegue full-stack funcionando en producción
+
+## Deploy actual
+
+### Frontend
+
+- Vercel
+- [https://jobdossier.vercel.app](https://jobdossier.vercel.app)
+
+### Backend principal
+
+- Render
+- [https://jobdossier.onrender.com](https://jobdossier.onrender.com)
+
+### Microservicio analytics
+
+- Render
+- `jobdossier-analytics`
+
+### Base de datos
+
+- Neon PostgreSQL
+- `DATABASE_URL` para Prisma
+- conexión JDBC separada para Spring Boot
+
+## Checklist de deploy
+
+Para publicar el proyecto en producción:
+
+1. Crear la base de datos en Neon
+2. Configurar en Render el backend NestJS con:
+   - `DATABASE_URL`
+   - `JWT_SECRET`
+   - `ANALYTICS_SERVICE_URL`
+   - `FRONTEND_URL`
+   - `ADZUNA_APP_ID`
+   - `ADZUNA_APP_KEY`
+3. Configurar en Render el microservicio Spring Boot con:
+   - `ANALYTICS_DATASOURCE_URL`
+   - `ANALYTICS_DATASOURCE_USERNAME`
+   - `ANALYTICS_DATASOURCE_PASSWORD`
+   - `PORT`
+4. Desplegar el frontend React en Vercel usando la carpeta `frontend`
+5. Configurar en Vercel:
+   - `VITE_API_URL`
+6. Verificar que NestJS acepta el origen real del frontend mediante `FRONTEND_URL`
+7. Verificar que Prisma aplica migraciones al arrancar el backend
+8. Probar el flujo completo:
+   - register
+   - login
+   - dashboard
+   - filtros
+   - analytics
+   - sockets
+
+## CI
+
+El proyecto incluye pipeline de GitHub Actions para:
+
+- instalar dependencias del backend
+- ejecutar tests de NestJS
+- compilar el backend
+- ejecutar tests de Spring Boot
+- compilar y testear el frontend
+- validar la integración básica de las tres capas
+
+## Próximos pasos
+
+- mejorar observabilidad y logging del backend
+- refinar UX del dashboard
+- ampliar test coverage end-to-end
+- enriquecer la visualización de analytics
+- endurecer manejo de errores y estados vacíos
+
+## Autor
+
+Proyecto desarrollado por Jaime Tarín como pieza de portfolio para practicar y demostrar:
+
+- NestJS
+- React
+- Prisma
+- Spring Boot
+- PostgreSQL
+- JWT
+- WebSockets
+- testing
+- CI/CD
+- despliegue full-stack
